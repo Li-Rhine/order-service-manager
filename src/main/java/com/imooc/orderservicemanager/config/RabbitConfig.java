@@ -5,11 +5,13 @@ import com.imooc.orderservicemanager.service.OrderMessageService;
 import com.rabbitmq.client.Channel;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.*;
+import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.connection.CorrelationData;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.amqp.rabbit.listener.RabbitListenerContainerFactory;
 import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer;
 import org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter;
 import org.springframework.amqp.rabbit.listener.api.ChannelAwareMessageListener;
@@ -174,64 +176,74 @@ public class RabbitConfig {
         return rabbitTemplate;
     }
 
-    //消费端高级特性
+//    //消费端高级特性
+//    @Bean
+//    public SimpleMessageListenerContainer messageListenerContainer(@Autowired ConnectionFactory connectionFactory) {
+//        SimpleMessageListenerContainer messageListenerContainer =
+//                new SimpleMessageListenerContainer(connectionFactory);
+//        //监听"queue.order"队列
+//        messageListenerContainer.setQueueNames("queue.order");
+//        messageListenerContainer.setConcurrentConsumers(3);
+//        messageListenerContainer.setMaxConcurrentConsumers(5);
+//        //确认方式
+////        messageListenerContainer.setAcknowledgeMode(AcknowledgeMode.AUTO);
+////        messageListenerContainer.setMessageListener(new MessageListener() {
+////            @Override
+////            public void onMessage(Message message) {
+////                log.info("message:{}", message);
+////            }
+////        });
+//
+//        //手动确认
+//        messageListenerContainer.setAcknowledgeMode(AcknowledgeMode.MANUAL);
+////        messageListenerContainer.setMessageListener(new ChannelAwareMessageListener() {
+////            @Override
+////            public void onMessage(Message message, Channel channel) throws Exception {
+////                log.info("处理message:{}", message);
+////                orderMessageService.handleMessage(message.getBody());
+////                channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
+////            }
+////        });
+//
+//        MessageListenerAdapter messageListenerAdapter = new MessageListenerAdapter(orderMessageService);
+//
+//        //消息转化器
+//        Jackson2JsonMessageConverter messageConverter = new Jackson2JsonMessageConverter();
+//        //1
+//        messageConverter.setClassMapper(new ClassMapper() {
+//            @Override
+//            public void fromClass(Class<?> clazz, MessageProperties properties) {
+//
+//            }
+//
+//            @Override
+//            public Class<?> toClass(MessageProperties properties) {
+//                return OrderMessageDTO.class;
+//            }
+//        });
+//        messageListenerAdapter.setMessageConverter(messageConverter);
+//
+//
+//        Map<String, String> methodMap = new HashMap<>(8);
+//        //messageListenerAdapter高级特性，指定队列和方法直接绑定
+//        methodMap.put("queue.order", "handleMessage");
+//        messageListenerAdapter.setQueueOrTagToMethodName(methodMap);
+//
+//        messageListenerContainer.setMessageListener(messageListenerAdapter);
+//
+//
+////        //消费端限流
+//        messageListenerContainer.setPrefetchCount(1);
+//        return messageListenerContainer;
+//    }
+
+
     @Bean
-    public SimpleMessageListenerContainer messageListenerContainer(@Autowired ConnectionFactory connectionFactory) {
-        SimpleMessageListenerContainer messageListenerContainer =
-                new SimpleMessageListenerContainer(connectionFactory);
-        //监听"queue.order"队列
-        messageListenerContainer.setQueueNames("queue.order");
-        messageListenerContainer.setConcurrentConsumers(3);
-        messageListenerContainer.setMaxConcurrentConsumers(5);
-        //确认方式
-//        messageListenerContainer.setAcknowledgeMode(AcknowledgeMode.AUTO);
-//        messageListenerContainer.setMessageListener(new MessageListener() {
-//            @Override
-//            public void onMessage(Message message) {
-//                log.info("message:{}", message);
-//            }
-//        });
+    public RabbitListenerContainerFactory rabbitListenerContainerFactory(@Autowired ConnectionFactory connectionFactory) {
 
-        //手动确认
-        messageListenerContainer.setAcknowledgeMode(AcknowledgeMode.MANUAL);
-//        messageListenerContainer.setMessageListener(new ChannelAwareMessageListener() {
-//            @Override
-//            public void onMessage(Message message, Channel channel) throws Exception {
-//                log.info("处理message:{}", message);
-//                orderMessageService.handleMessage(message.getBody());
-//                channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
-//            }
-//        });
+        SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
+        factory.setConnectionFactory(connectionFactory);
+        return factory;
 
-        MessageListenerAdapter messageListenerAdapter = new MessageListenerAdapter(orderMessageService);
-
-        //消息转化器
-        Jackson2JsonMessageConverter messageConverter = new Jackson2JsonMessageConverter();
-        //1
-        messageConverter.setClassMapper(new ClassMapper() {
-            @Override
-            public void fromClass(Class<?> clazz, MessageProperties properties) {
-
-            }
-
-            @Override
-            public Class<?> toClass(MessageProperties properties) {
-                return OrderMessageDTO.class;
-            }
-        });
-        messageListenerAdapter.setMessageConverter(messageConverter);
-
-
-        Map<String, String> methodMap = new HashMap<>(8);
-        //messageListenerAdapter高级特性，指定队列和方法直接绑定
-        methodMap.put("queue.order", "handleMessage");
-        messageListenerAdapter.setQueueOrTagToMethodName(methodMap);
-
-        messageListenerContainer.setMessageListener(messageListenerAdapter);
-
-
-//        //消费端限流
-        messageListenerContainer.setPrefetchCount(1);
-        return messageListenerContainer;
     }
 }

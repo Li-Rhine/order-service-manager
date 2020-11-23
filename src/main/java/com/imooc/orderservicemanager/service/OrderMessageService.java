@@ -7,7 +7,11 @@ import com.imooc.orderservicemanager.enummeration.OrderStatus;
 import com.imooc.orderservicemanager.po.OrderDetailPO;
 import com.rabbitmq.client.*;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.core.Message;
+import org.springframework.amqp.rabbit.annotation.RabbitHandler;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +29,10 @@ import java.util.concurrent.TimeoutException;
  */
 @Slf4j
 @Service
+@RabbitListener(
+        containerFactory = "rabbitListenerContainerFactory",
+        queues = "queue.order"
+)
 public class OrderMessageService {
 
     @Autowired
@@ -34,14 +42,15 @@ public class OrderMessageService {
 
 
     //必须要叫handleMessage方法
-    public void handleMessage(OrderMessageDTO orderMessageDTO){
-        log.info("deliverCallback:messageBody:{}", orderMessageDTO);
+    @RabbitHandler(isDefault = true)
+    public void handleMessage(@Payload Message message){
+        log.info("deliverCallback:messageBody:{}", new String(message.getBody()));
         ConnectionFactory connectionFactory = new ConnectionFactory();
         connectionFactory.setHost("101.132.104.74");
 
         try {
             //将消息体反序列化成DTO
-//            OrderMessageDTO orderMessageDTO = objectMapper.readValue(messageBody, OrderMessageDTO.class);
+            OrderMessageDTO orderMessageDTO = objectMapper.readValue(message.getBody(), OrderMessageDTO.class);
             //数据库中读取订单PO
             OrderDetailPO orderPO = orderDetailDao.selectOrder(orderMessageDTO.getOrderId());
             //consumerTag可以辨别是哪个服务发来的消息
