@@ -46,62 +46,7 @@ public class OrderMessageService {
         try(Connection connection = connectionFactory.newConnection();
             Channel channel = connection.createChannel()) {
 
-            /****** restaurant *******/
-            channel.exchangeDeclare(
-                    "exchange.order.restaurant",
-                    BuiltinExchangeType.DIRECT,
-                    true,
-                    false,
-                    null);
-            channel.queueDeclare(
-                    "queue.order",
-                    true,
-                    false,
-                    false,
-                    null);
-            channel.queueBind(
-                    "queue.order",
-                    "exchange.order.restaurant",
-                    "key.order");
 
-
-            /******** deliveryman *******/
-            channel.exchangeDeclare(
-                    "exchange.order.deliveryman",
-                    BuiltinExchangeType.DIRECT,
-                    true,
-                    false,
-                    null);
-            channel.queueBind(
-                    "queue.order",
-                    "exchange.order.deliveryman",
-                    "key.order");
-
-            /************** settlement *****************/
-            channel.exchangeDeclare(
-                    "exchange.order.settlement",
-                    BuiltinExchangeType.FANOUT,
-                    true,
-                    false,
-                    null
-            );
-            channel.queueBind(
-                    "queue.order",
-                    "exchange.settlement.order",
-                    "key.order");
-
-            /************ reward ***********/
-            channel.exchangeDeclare(
-                    "exchange.order.reward",
-                    BuiltinExchangeType.TOPIC,
-                    true,
-                    false,
-                    null
-            );
-            channel.queueBind(
-                    "queue.order",
-                    "exchange.order.reward",
-                    "key.order");
 
             // 声明exchange、queue后，绑定两者，然后设置监听队列
             channel.basicConsume("queue.order", true, deliverCallback, consumerTag -> {});
