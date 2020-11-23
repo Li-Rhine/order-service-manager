@@ -70,14 +70,16 @@ public class OrderService {
             };
             channel.addConfirmListener(confirmListener);
 
+            for (int i = 0; i < 50; i++) {
+                channel.basicPublish(
+                        "exchange.order.restaurant",
+                        "key.restaurant",
+                        null,
+                        messageToSend.getBytes()
+                );
+                log.info("message sent");
+            }
 
-            channel.basicPublish(
-                    "exchange.order.restaurant",
-                    "key.restaurant",
-                    null,
-                    messageToSend.getBytes()
-            );
-            log.info("message sent");
             //线程不能结束，所以需要sleep。一结束就收不到确认消息
             Thread.sleep(1000000);
 
