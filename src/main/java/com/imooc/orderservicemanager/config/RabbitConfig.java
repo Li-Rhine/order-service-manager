@@ -10,12 +10,15 @@ import org.springframework.amqp.rabbit.connection.CorrelationData;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer;
+import org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter;
 import org.springframework.amqp.rabbit.listener.api.ChannelAwareMessageListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeoutException;
 
 /**
@@ -30,10 +33,6 @@ public class RabbitConfig {
     @Autowired
     OrderMessageService orderMessageService;
 
-    @Autowired
-    public void startListenMessage() throws InterruptedException, TimeoutException, IOException {
-//        orderMessageService.handleMessage();
-    }
 
     /***************** restaurant ******************/
     @Bean
@@ -192,14 +191,26 @@ public class RabbitConfig {
 
         //手动确认
         messageListenerContainer.setAcknowledgeMode(AcknowledgeMode.MANUAL);
-        messageListenerContainer.setMessageListener(new ChannelAwareMessageListener() {
-            @Override
-            public void onMessage(Message message, Channel channel) throws Exception {
-                log.info("message:{}", message);
-                channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
-            }
-        });
-        //消费端限流
+//        messageListenerContainer.setMessageListener(new ChannelAwareMessageListener() {
+//            @Override
+//            public void onMessage(Message message, Channel channel) throws Exception {
+//                log.info("处理message:{}", message);
+//                orderMessageService.handleMessage(message.getBody());
+//                channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
+//            }
+//        });
+
+        MessageListenerAdapter messageListenerAdapter = new MessageListenerAdapter(orderMessageService);
+
+        Map<String, String> methodMap = new HashMap<>(8);
+        //messageListenerAdapter高级特性，指定队列和方法直接绑定
+        methodMap.put("queue.order", "handleMessage");
+        messageListenerAdapter.setQueueOrTagToMethodName(methodMap);
+
+        messageListenerContainer.setMessageListener(messageListenerAdapter);
+
+
+//        //消费端限流
         messageListenerContainer.setPrefetchCount(1);
         return messageListenerContainer;
     }

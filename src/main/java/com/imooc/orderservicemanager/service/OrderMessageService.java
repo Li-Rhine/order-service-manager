@@ -32,37 +32,10 @@ public class OrderMessageService {
     @Autowired
     OrderDetailDao orderDetailDao;
 
-    /**
-     * 声明消息队列、交换机、绑定、消息的处理
-     *  @Async起一个异步线程（有异步线程一定要有线程池）
-     */
-    @Async
-    public void handleMessage() throws IOException, TimeoutException, InterruptedException {
-        Thread.sleep(5000);
-        ConnectionFactory connectionFactory = new ConnectionFactory();
-        connectionFactory.setHost("101.132.104.74");
 
-        // connection用完一定要关闭连接，否则会大量的消耗资源
-        //用try(){}写法相当于在finally里面手动的加上connection.close()方法了
-        try(Connection connection = connectionFactory.newConnection();
-            Channel channel = connection.createChannel()) {
-
-
-
-            // 声明exchange、queue后，绑定两者，然后设置监听队列
-//            channel.basicConsume("queue.order", true, deliverCallback, consumerTag -> {});
-            // 异步线程一结束就停止监听队列，所以需要让线程一直sleep下去，保持存活
-            while (true) {
-                Thread.sleep(10000000);
-            }
-
-        }
-
-    }
-
-    DeliverCallback deliverCallback = ((consumerTag, message) -> {
-        String messageBody = new String(message.getBody());
-        log.info("deliverCallback:messageBody:{}", messageBody);
+    //必须要叫handleMessage方法
+    public void handleMessage(byte[] messageBody){
+        log.info("deliverCallback:messageBody:{}", new String(messageBody));
         ConnectionFactory connectionFactory = new ConnectionFactory();
         connectionFactory.setHost("101.132.104.74");
 
@@ -158,6 +131,6 @@ public class OrderMessageService {
         }catch (Exception e) {
             log.error(e.getMessage(), e);
         }
-    });
+    };
 
 }
