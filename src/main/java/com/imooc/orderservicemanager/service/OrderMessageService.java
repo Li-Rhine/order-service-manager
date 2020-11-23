@@ -8,8 +8,7 @@ import com.imooc.orderservicemanager.po.OrderDetailPO;
 import com.rabbitmq.client.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Message;
-import org.springframework.amqp.rabbit.annotation.RabbitHandler;
-import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.amqp.rabbit.annotation.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.scheduling.annotation.Async;
@@ -41,7 +40,17 @@ public class OrderMessageService {
     //必须要叫handleMessage方法
     @RabbitListener(
             containerFactory = "rabbitListenerContainerFactory",
-            queues = "queue.order"
+            admin = "rabbitAdmin",
+            bindings = {
+                    @QueueBinding(
+                            value = @Queue(name = "queue.order", arguments = {
+                                    @Argument(name = "x-message-ttl", value = "1000", type = "java.lang.Integer"),
+                                    @Argument(name = "x-dead-letter-exchange", value = "exchange.dlx")
+                            }),
+                            exchange = @Exchange(name = "exchange.order.restaurant"),
+                            key = "key.order"
+                    )
+            }
     )
     public void handleMessage(@Payload Message message){
         log.info("deliverCallback:messageBody:{}", new String(message.getBody()));
