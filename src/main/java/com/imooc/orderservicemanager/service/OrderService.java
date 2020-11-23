@@ -7,6 +7,7 @@ import com.imooc.orderservicemanager.enummeration.OrderStatus;
 import com.imooc.orderservicemanager.po.OrderDetailPO;
 import com.imooc.orderservicemanager.vo.OrderCreateVO;
 import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.ConfirmListener;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import lombok.extern.slf4j.Slf4j;
@@ -55,6 +56,21 @@ public class OrderService {
             String messageToSend = objectMapper.writeValueAsString(orderMessageDTO);
             channel.confirmSelect();
 
+            ConfirmListener confirmListener = new ConfirmListener() {
+                @Override
+                //deliveryTag发送端的消息序号 multiple true确认单条消息 false确认单条消息
+                public void handleAck(long deliveryTag, boolean multiple) throws IOException {
+                    log.info("Ack, deliveryTag:{}, multiple:{}", deliveryTag, multiple);
+                }
+
+                @Override
+                public void handleNack(long deliveryTag, boolean multiple) throws IOException {
+                    log.info("Nack, deliveryTag:{}, multiple:{}", deliveryTag, multiple);
+                }
+            };
+            channel.addConfirmListener(confirmListener);
+
+
             for (int i = 0; i < 10; i++) {
                 channel.basicPublish(
                         "exchange.order.restaurant",
@@ -64,11 +80,8 @@ public class OrderService {
                 );
                 log.info("message sent");
             }
-            if ( channel.waitForConfirms() ) {
-                log.info("RabbitMQ confirm success");
-            } else {
-                log.info("RabbitMQ confirm failed");
-            }
+            //线程不能结束，所以需要sleep。一结束就收不到确认消息
+            Thread.sleep(1000000);
 
         }
     }
