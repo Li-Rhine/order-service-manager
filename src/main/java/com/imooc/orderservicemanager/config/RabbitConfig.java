@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
+import org.springframework.amqp.rabbit.connection.CorrelationData;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -119,6 +120,11 @@ public class RabbitConfig {
         connectionFactory.setPort(5672);
         connectionFactory.setUsername("guest");
         connectionFactory.setPassword("guest");
+        //发送端确认机制和消息返回机制
+        //SIMPLE是异步确认 CORRELATED是同步确认，并且消息需要设置CORRELATED属性
+        connectionFactory.setPublisherConfirmType(CachingConnectionFactory.ConfirmType.CORRELATED);
+        connectionFactory.setPublisherReturns(true);
+
         //使用一下connectionFactory，否则SpringBoot会懒加载connectionFactory，导致使用Rabbit之前，控制台找不到配置信息
         connectionFactory.createConnection();
         return connectionFactory;
@@ -144,6 +150,22 @@ public class RabbitConfig {
     @Bean
     public RabbitTemplate rabbitTemplate(@Autowired ConnectionFactory connectionFactory) {
         RabbitTemplate rabbitTemplate = new RabbitTemplate(connectionFactory);
+        //设置托管，开启发送端消息确认和消息返回
+        rabbitTemplate.setMandatory(true);
+        rabbitTemplate.setReturnsCallback(new RabbitTemplate.ReturnsCallback() {
+            @Override
+            public void returnedMessage(ReturnedMessage returned) {
+                log.info("消息被打回+ message:{}", returned.getMessage());
+            }
+        });
+        //发送端确认
+        rabbitTemplate.setConfirmCallback(new RabbitTemplate.ConfirmCallback() {
+            @Override
+            public void confirm(CorrelationData correlationData, boolean ack, String cause) {
+                //默认是异步确认
+                log.info("消息发送已确认 correlationData:{}", correlationData);
+            }
+        });
         return rabbitTemplate;
     }
 }

@@ -10,6 +10,7 @@ import com.rabbitmq.client.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageProperties;
+import org.springframework.amqp.rabbit.connection.CorrelationData;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -52,19 +53,22 @@ public class OrderService {
         String messageToSend = objectMapper.writeValueAsString(orderMessageDTO);
         MessageProperties messageProperties = new MessageProperties();
         Message message = new Message(messageToSend.getBytes(), messageProperties);
+        CorrelationData correlationData = new CorrelationData();
+        correlationData.setId(orderDetailPO.getId().toString());
         // String exchange, String routingKey, Message message
         //两种方式send 可以传递消息的参数，send底层是basicPublish
-//        rabbitTemplate.send(
-//                "exchange.order.restaurant",
-//                "key.restaurant",
-//                message
-//        );
-
-        rabbitTemplate.convertAndSend(
+        rabbitTemplate.send(
                 "exchange.order.restaurant",
                 "key.restaurant",
-                messageToSend
+                message,
+                correlationData
         );
+
+//        rabbitTemplate.convertAndSend(
+//                "exchange.order.restaurant",
+//                "key.restaurant",
+//                messageToSend
+//        );
 
 
 
