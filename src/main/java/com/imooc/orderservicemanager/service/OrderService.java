@@ -8,6 +8,9 @@ import com.imooc.orderservicemanager.po.OrderDetailPO;
 import com.imooc.orderservicemanager.vo.OrderCreateVO;
 import com.rabbitmq.client.*;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.core.Message;
+import org.springframework.amqp.core.MessageProperties;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -28,6 +31,9 @@ public class OrderService {
     @Autowired
     ObjectMapper objectMapper;
 
+    @Autowired
+    RabbitTemplate rabbitTemplate;
+
     public void createOrder(OrderCreateVO orderCreateVO) throws IOException, TimeoutException, InterruptedException {
         OrderDetailPO orderDetailPO = new OrderDetailPO();
         orderDetailPO.setAddress(orderCreateVO.getAddress());
@@ -42,44 +48,66 @@ public class OrderService {
         orderMessageDTO.setProductId(orderDetailPO.getProductId());
         orderMessageDTO.setAccountId(orderDetailPO.getAccountId());
 
-        ConnectionFactory connectionFactory = new ConnectionFactory();
-        connectionFactory.setHost("101.132.104.74");
 
-        try(/******** 创建连接，使用之后并关闭channel **********/
-            Connection connnection = connectionFactory.newConnection();
-            Channel channel = connnection.createChannel();) {
+        String messageToSend = objectMapper.writeValueAsString(orderMessageDTO);
+        MessageProperties messageProperties = new MessageProperties();
+        Message message = new Message(messageToSend.getBytes(), messageProperties);
+        // String exchange, String routingKey, Message message
+        //两种方式send 可以传递消息的参数，send底层是basicPublish
+//        rabbitTemplate.send(
+//                "exchange.order.restaurant",
+//                "key.restaurant",
+//                message
+//        );
 
-            /************ RabbitMQ传递的是字符，所以需要转换为json **************/
-            String messageToSend = objectMapper.writeValueAsString(orderMessageDTO);
-            channel.confirmSelect();
+        rabbitTemplate.convertAndSend(
+                "exchange.order.restaurant",
+                "key.restaurant",
+                messageToSend
+        );
 
-            ConfirmListener confirmListener = new ConfirmListener() {
-                @Override
-                //deliveryTag发送端的消息序号 multiple true确认单条消息 false确认单条消息
-                public void handleAck(long deliveryTag, boolean multiple) throws IOException {
-                    log.info("Ack, deliveryTag:{}, multiple:{}", deliveryTag, multiple);
-                }
 
-                @Override
-                public void handleNack(long deliveryTag, boolean multiple) throws IOException {
-                    log.info("Nack, deliveryTag:{}, multiple:{}", deliveryTag, multiple);
-                }
-            };
-            channel.addConfirmListener(confirmListener);
 
-            AMQP.BasicProperties properties = new AMQP.BasicProperties().builder().expiration("15000").build();
-            channel.basicPublish(
-                    "exchange.order.restaurant",
-                    "key.restaurant",
-                    null,
-                    messageToSend.getBytes()
-            );
-            log.info("message sent");
+//        //------------------------//
+//
+//        ConnectionFactory connectionFactory = new ConnectionFactory();
+//        connectionFactory.setHost("101.132.104.74");
+//
+//        try(/******** 创建连接，使用之后并关闭channel **********/
+//            Connection connnection = connectionFactory.newConnection();
+//            Channel channel = connnection.createChannel();) {
+//
+//            /************ RabbitMQ传递的是字符，所以需要转换为json **************/
+//            String messageToSend = objectMapper.writeValueAsString(orderMessageDTO);
+//            channel.confirmSelect();
+//
+//            ConfirmListener confirmListener = new ConfirmListener() {
+//                @Override
+//                //deliveryTag发送端的消息序号 multiple true确认单条消息 false确认单条消息
+//                public void handleAck(long deliveryTag, boolean multiple) throws IOException {
+//                    log.info("Ack, deliveryTag:{}, multiple:{}", deliveryTag, multiple);
+//                }
+//
+//                @Override
+//                public void handleNack(long deliveryTag, boolean multiple) throws IOException {
+//                    log.info("Nack, deliveryTag:{}, multiple:{}", deliveryTag, multiple);
+//                }
+//            };
+//            channel.addConfirmListener(confirmListener);
+//
+//            AMQP.BasicProperties properties = new AMQP.BasicProperties().builder().expiration("15000").build();
+//            channel.basicPublish(
+//                    "exchange.order.restaurant",
+//                    "key.restaurant",
+//                    null,
+//                    messageToSend.getBytes()
+//            );
+//            log.info("message sent");
+//
+//            //线程不能结束，所以需要sleep。一结束就收不到确认消息
+//            Thread.sleep(1000000);
 
-            //线程不能结束，所以需要sleep。一结束就收不到确认消息
-            Thread.sleep(1000000);
-
-        }
+//        }
     }
 
 }

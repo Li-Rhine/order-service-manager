@@ -6,6 +6,7 @@ import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -47,6 +48,19 @@ public class RabbitConfig {
                 Binding.DestinationType.QUEUE,
                 "exchange.order.restaurant",
                 "key.order",
+                null);
+    }
+
+    @Bean
+    public Queue queue2() {
+        return new Queue("queue.restaurant");
+    }
+    @Bean
+    public Binding binding6() {
+        return new Binding("queue.restaurant",
+                Binding.DestinationType.QUEUE,
+                "exchange.order.restaurant",
+                "key.restaurant",
                 null);
     }
 
@@ -113,6 +127,7 @@ public class RabbitConfig {
     @Bean
     public RabbitAdmin rabbitAdmin(@Autowired ConnectionFactory connectionFactory) {
         RabbitAdmin admin = new RabbitAdmin(connectionFactory);
+        //admin需要自动启动
         admin.setAutoStartup(true);
         return admin;
     }
@@ -123,5 +138,12 @@ public class RabbitConfig {
     public void initRabbit() {
 
 
+    }
+
+
+    @Bean
+    public RabbitTemplate rabbitTemplate(@Autowired ConnectionFactory connectionFactory) {
+        RabbitTemplate rabbitTemplate = new RabbitTemplate(connectionFactory);
+        return rabbitTemplate;
     }
 }
