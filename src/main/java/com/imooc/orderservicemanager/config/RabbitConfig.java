@@ -105,6 +105,8 @@ public class RabbitConfig {
         connectionFactory.setPort(5672);
         connectionFactory.setUsername("guest");
         connectionFactory.setPassword("guest");
+        //使用一下connectionFactory，否则SpringBoot会懒加载connectionFactory，导致使用Rabbit之前，控制台找不到配置信息
+        connectionFactory.createConnection();
         return connectionFactory;
     }
 
