@@ -39,9 +39,10 @@ public class OrderMessageService {
 
 
     //必须要叫handleMessage方法
+    //下面@RabbitListener注解代替RabbitConfig里的exchange、queue的bean
     @RabbitListener(
             containerFactory = "rabbitListenerContainerFactory",
-            admin = "rabbitAdmin",
+//            admin = "rabbitAdmin",
             bindings = {
                     @QueueBinding(
                             value = @Queue(name = "queue.order"
