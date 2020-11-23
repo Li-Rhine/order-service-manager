@@ -29,10 +29,7 @@ import java.util.concurrent.TimeoutException;
  */
 @Slf4j
 @Service
-@RabbitListener(
-        containerFactory = "rabbitListenerContainerFactory",
-        queues = "queue.order"
-)
+
 public class OrderMessageService {
 
     @Autowired
@@ -42,7 +39,10 @@ public class OrderMessageService {
 
 
     //必须要叫handleMessage方法
-    @RabbitHandler(isDefault = true)
+    @RabbitListener(
+            containerFactory = "rabbitListenerContainerFactory",
+            queues = "queue.order"
+    )
     public void handleMessage(@Payload Message message){
         log.info("deliverCallback:messageBody:{}", new String(message.getBody()));
         ConnectionFactory connectionFactory = new ConnectionFactory();
