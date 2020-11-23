@@ -34,14 +34,14 @@ public class OrderMessageService {
 
 
     //必须要叫handleMessage方法
-    public void handleMessage(byte[] messageBody){
-        log.info("deliverCallback:messageBody:{}", new String(messageBody));
+    public void handleMessage(OrderMessageDTO orderMessageDTO){
+        log.info("deliverCallback:messageBody:{}", orderMessageDTO);
         ConnectionFactory connectionFactory = new ConnectionFactory();
         connectionFactory.setHost("101.132.104.74");
 
         try {
             //将消息体反序列化成DTO
-            OrderMessageDTO orderMessageDTO = objectMapper.readValue(messageBody, OrderMessageDTO.class);
+//            OrderMessageDTO orderMessageDTO = objectMapper.readValue(messageBody, OrderMessageDTO.class);
             //数据库中读取订单PO
             OrderDetailPO orderPO = orderDetailDao.selectOrder(orderMessageDTO.getOrderId());
             //consumerTag可以辨别是哪个服务发来的消息

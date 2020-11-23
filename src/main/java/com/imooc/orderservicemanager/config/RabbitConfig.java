@@ -1,5 +1,6 @@
 package com.imooc.orderservicemanager.config;
 
+import com.imooc.orderservicemanager.dto.OrderMessageDTO;
 import com.imooc.orderservicemanager.service.OrderMessageService;
 import com.rabbitmq.client.Channel;
 import lombok.extern.slf4j.Slf4j;
@@ -12,6 +13,8 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer;
 import org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter;
 import org.springframework.amqp.rabbit.listener.api.ChannelAwareMessageListener;
+import org.springframework.amqp.support.converter.ClassMapper;
+import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -201,6 +204,23 @@ public class RabbitConfig {
 //        });
 
         MessageListenerAdapter messageListenerAdapter = new MessageListenerAdapter(orderMessageService);
+
+        //消息转化器
+        Jackson2JsonMessageConverter messageConverter = new Jackson2JsonMessageConverter();
+        //1
+        messageConverter.setClassMapper(new ClassMapper() {
+            @Override
+            public void fromClass(Class<?> clazz, MessageProperties properties) {
+
+            }
+
+            @Override
+            public Class<?> toClass(MessageProperties properties) {
+                return OrderMessageDTO.class;
+            }
+        });
+        messageListenerAdapter.setMessageConverter(messageConverter);
+
 
         Map<String, String> methodMap = new HashMap<>(8);
         //messageListenerAdapter高级特性，指定队列和方法直接绑定
