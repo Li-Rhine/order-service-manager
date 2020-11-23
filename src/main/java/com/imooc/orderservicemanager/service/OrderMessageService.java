@@ -50,7 +50,7 @@ public class OrderMessageService {
 
 
             // 声明exchange、queue后，绑定两者，然后设置监听队列
-            channel.basicConsume("queue.order", true, deliverCallback, consumerTag -> {});
+//            channel.basicConsume("queue.order", true, deliverCallback, consumerTag -> {});
             // 异步线程一结束就停止监听队列，所以需要让线程一直sleep下去，保持存活
             while (true) {
                 Thread.sleep(10000000);

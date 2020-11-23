@@ -1,6 +1,7 @@
 package com.imooc.orderservicemanager.config;
 
 import com.imooc.orderservicemanager.service.OrderMessageService;
+import com.rabbitmq.client.Channel;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
@@ -8,6 +9,8 @@ import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.connection.CorrelationData;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer;
+import org.springframework.amqp.rabbit.listener.api.ChannelAwareMessageListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -167,5 +170,37 @@ public class RabbitConfig {
             }
         });
         return rabbitTemplate;
+    }
+
+    //消费端高级特性
+    @Bean
+    public SimpleMessageListenerContainer messageListenerContainer(@Autowired ConnectionFactory connectionFactory) {
+        SimpleMessageListenerContainer messageListenerContainer =
+                new SimpleMessageListenerContainer(connectionFactory);
+        //监听"queue.order"队列
+        messageListenerContainer.setQueueNames("queue.order");
+        messageListenerContainer.setConcurrentConsumers(3);
+        messageListenerContainer.setMaxConcurrentConsumers(5);
+        //确认方式
+//        messageListenerContainer.setAcknowledgeMode(AcknowledgeMode.AUTO);
+//        messageListenerContainer.setMessageListener(new MessageListener() {
+//            @Override
+//            public void onMessage(Message message) {
+//                log.info("message:{}", message);
+//            }
+//        });
+
+        //手动确认
+        messageListenerContainer.setAcknowledgeMode(AcknowledgeMode.MANUAL);
+        messageListenerContainer.setMessageListener(new ChannelAwareMessageListener() {
+            @Override
+            public void onMessage(Message message, Channel channel) throws Exception {
+                log.info("message:{}", message);
+                channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
+            }
+        });
+        //消费端限流
+        messageListenerContainer.setPrefetchCount(1);
+        return messageListenerContainer;
     }
 }
