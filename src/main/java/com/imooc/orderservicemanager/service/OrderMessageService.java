@@ -7,6 +7,7 @@ import com.imooc.orderservicemanager.enummeration.OrderStatus;
 import com.imooc.orderservicemanager.po.OrderDetailPO;
 import com.rabbitmq.client.*;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.core.ExchangeTypes;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.annotation.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,13 +44,31 @@ public class OrderMessageService {
             admin = "rabbitAdmin",
             bindings = {
                     @QueueBinding(
-                            value = @Queue(name = "queue.order", arguments = {
-                                    @Argument(name = "x-message-ttl", value = "1000", type = "java.lang.Integer"),
-                                    @Argument(name = "x-dead-letter-exchange", value = "exchange.dlx")
-                            }),
+                            value = @Queue(name = "queue.order"
+//                                    , arguments = {
+//                                    @Argument(name = "x-message-ttl", value = "1000", type = "java.lang.Integer"),
+//                                    @Argument(name = "x-dead-letter-exchange", value = "exchange.dlx")
+//                                    }
+                            ),
                             exchange = @Exchange(name = "exchange.order.restaurant"),
                             key = "key.order"
-                    )
+                    ),
+                    @QueueBinding(
+                            value = @Queue(name = "queue.order"),
+                            exchange = @Exchange(name = "exchange.order.deliveryman", type = ExchangeTypes.DIRECT),
+                            key = "key.order"
+                    ),
+                    @QueueBinding(
+                            value = @Queue(name = "queue.order"),
+                            exchange = @Exchange(name = "exchange.settlement.order", type = ExchangeTypes.FANOUT),
+                            key = "key.order"
+                    ),
+                    @QueueBinding(
+                            value = @Queue(name = "queue.order"),
+                            exchange = @Exchange(name = "exchange.order.reward", type = ExchangeTypes.TOPIC),
+                            key = "key.order"
+                    ),
+
             }
     )
     public void handleMessage(@Payload Message message){

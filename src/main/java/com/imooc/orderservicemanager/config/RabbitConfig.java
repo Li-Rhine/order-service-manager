@@ -40,83 +40,83 @@ public class RabbitConfig {
 
 
     /***************** restaurant ******************/
-    @Bean
-    public Exchange exchange1(){
-        return new DirectExchange("exchange.order.restaurant");
-    }
-
-    @Bean
-    public Queue queue1() {
-        return new Queue("queue.order");
-    }
-
-    @Bean
-    public Binding binding1() {
-        return new Binding("queue.order",
-                Binding.DestinationType.QUEUE,
-                "exchange.order.restaurant",
-                "key.order",
-                null);
-    }
-
-    @Bean
-    public Queue queue2() {
-        return new Queue("queue.restaurant");
-    }
-    @Bean
-    public Binding binding6() {
-        return new Binding("queue.restaurant",
-                Binding.DestinationType.QUEUE,
-                "exchange.order.restaurant",
-                "key.restaurant",
-                null);
-    }
-
-    /******************** deliveryman ***************/
-    @Bean
-    public Exchange exchange2(){
-        return new DirectExchange("exchange.order.deliveryman");
-    }
-    @Bean
-    public Binding binding2() {
-        return new Binding( "queue.order",
-                Binding.DestinationType.QUEUE,
-                "exchange.order.deliveryman",
-                "key.order",
-                null);
-    }
-
-    /************** settlement *****************/
-    @Bean
-    public Exchange exchange3(){
-        return new FanoutExchange("exchange.order.settlement");
-    }
-    @Bean
-    public Exchange exchange4(){
-        return new FanoutExchange("exchange.settlement.order");
-    }
-    @Bean
-    public Binding binding3() {
-        return new Binding( "queue.order",
-                Binding.DestinationType.QUEUE,
-                "exchange.settlement.order",
-                "key.order",
-                null);
-    }
-
-    /******************* reward ********************/
-    @Bean
-    public Exchange exchange5(){
-        return new DirectExchange("exchange.order.reward");
-    }
-    @Bean
-    public Binding binding4() {
-        return new Binding(  "queue.order",
-                Binding.DestinationType.QUEUE,
-                "exchange.order.reward",
-                "key.order",
-                null);
-    }
+//    @Bean
+//    public Exchange exchange1(){
+//        return new DirectExchange("exchange.order.restaurant");
+//    }
+//
+//    @Bean
+//    public Queue queue1() {
+//        return new Queue("queue.order");
+//    }
+//
+//    @Bean
+//    public Binding binding1() {
+//        return new Binding("queue.order",
+//                Binding.DestinationType.QUEUE,
+//                "exchange.order.restaurant",
+//                "key.order",
+//                null);
+//    }
+//
+//    @Bean
+//    public Queue queue2() {
+//        return new Queue("queue.restaurant");
+//    }
+//    @Bean
+//    public Binding binding6() {
+//        return new Binding("queue.restaurant",
+//                Binding.DestinationType.QUEUE,
+//                "exchange.order.restaurant",
+//                "key.restaurant",
+//                null);
+//    }
+//
+//    /******************** deliveryman ***************/
+//    @Bean
+//    public Exchange exchange2(){
+//        return new DirectExchange("exchange.order.deliveryman");
+//    }
+//    @Bean
+//    public Binding binding2() {
+//        return new Binding( "queue.order",
+//                Binding.DestinationType.QUEUE,
+//                "exchange.order.deliveryman",
+//                "key.order",
+//                null);
+//    }
+//
+//    /************** settlement *****************/
+//    @Bean
+//    public Exchange exchange3(){
+//        return new FanoutExchange("exchange.order.settlement");
+//    }
+//    @Bean
+//    public Exchange exchange4(){
+//        return new FanoutExchange("exchange.settlement.order");
+//    }
+//    @Bean
+//    public Binding binding3() {
+//        return new Binding( "queue.order",
+//                Binding.DestinationType.QUEUE,
+//                "exchange.settlement.order",
+//                "key.order",
+//                null);
+//    }
+//
+//    /******************* reward ********************/
+//    @Bean
+//    public Exchange exchange5(){
+//        return new DirectExchange("exchange.order.reward");
+//    }
+//    @Bean
+//    public Binding binding4() {
+//        return new Binding(  "queue.order",
+//                Binding.DestinationType.QUEUE,
+//                "exchange.order.reward",
+//                "key.order",
+//                null);
+//    }
 
 
     @Bean
