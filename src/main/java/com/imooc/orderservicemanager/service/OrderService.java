@@ -54,13 +54,16 @@ public class OrderService {
             /************ RabbitMQ传递的是字符，所以需要转换为json **************/
             String messageToSend = objectMapper.writeValueAsString(orderMessageDTO);
             channel.confirmSelect();
-            channel.basicPublish(
-                    "exchange.order.restaurant",
-                    "key.restaurant",
-                    null,
-                    messageToSend.getBytes()
-                    );
-            log.info("message sent");
+
+            for (int i = 0; i < 10; i++) {
+                channel.basicPublish(
+                        "exchange.order.restaurant",
+                        "key.restaurant",
+                        null,
+                        messageToSend.getBytes()
+                );
+                log.info("message sent");
+            }
             if ( channel.waitForConfirms() ) {
                 log.info("RabbitMQ confirm success");
             } else {
